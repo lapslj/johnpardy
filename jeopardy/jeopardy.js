@@ -1,5 +1,6 @@
 class Clue{
-    constructor(question,answer,showing = "null"){
+    constructor(cKey,question,answer,showing = "null"){
+        this.cKey = cKey;
         this.question = question;
         this.answer = answer;
         this.showing = showing;
@@ -28,7 +29,7 @@ class Game{
     top.setAttribute('id', 'column-top');
     for (let x = 0; x < this.width; x++) {
     const headCell = document.createElement('td');
-    headCell.setAttribute('id', x);
+    headCell.setAttribute('id', "c"+x);
     top.append(headCell);
     }
 
@@ -41,6 +42,7 @@ class Game{
     for (let x = 0; x < this.width; x++) {
       const cell = document.createElement('td');
       cell.setAttribute('id', `c${x}-${y}`);
+      cell.innerText = "?"
       row.append(cell);
     }
 
@@ -77,7 +79,7 @@ function ranArray(max){
     
 }
 
-async function catClues(id){
+async function catClues(id,cVal){
     let response = await axios.get("https://jservice.io/api/category?id="+id) //returning 1 category object
     let allClues = response.data.clues //store all the clues in an array
     console.log(response)
@@ -87,12 +89,13 @@ async function catClues(id){
     console.log(cluesTotal)
     console.log(clueVals)
     let jCat = {}
-    jCat.catname = response.data.title
+    jCat.catname = (response.data.title).toUpperCase()
     for(let i=0;i<5;i++){
         let cIndex = clueVals[i]
         let tClue = allClues[cIndex]
         console.log(tClue)
-        let uClue = new Clue(tClue.question,tClue.answer)
+        let cKey = `c-${cVal}-${i}`
+        let uClue = new Clue(cKey,tClue.question,tClue.answer)
         let qname = "q"+i
         jCat[qname] = uClue
     }
@@ -104,47 +107,20 @@ async function catClues(id){
 async function randFive(){
     let categories = []
     let nums = ranArray(5000);
-    for (num of nums){
-        categories.push(await catClues(num))
+    for (let i = 0;i < 5; i++){
+        categories.push(await catClues(nums[i],i))
     }
     console.log("here's our categories")
     console.log(categories)
     return categories
 }
 
-
-
-
-// categories is the main data structure for the app; it looks like this:
-
-//  [
-//    { title: "Math",
-//      clues: [
-//        {question: "2+2", answer: 4, showing: null},
-//        {question: "1+1", answer: 2, showing: null}
-//        ...
-//      ],
-//    },
-//    { title: "Literature",
-//      clues: [
-//        {question: "Hamlet Author", answer: "Shakespeare", showing: null},
-//        {question: "Bell Jar Author", answer: "Plath", showing: null},
-//        ...
-//      ],
-//    },
-//    ...
-//  ]
-
-let categories = [];
-
-
-/** Get NUM_CATEGORIES random category from API.
- *
- * Returns array of category ids
- */
-
-function getCategoryIds() {
-}
+async function fillBoard(){
+    let cats = await randFive()
+        for(let i=0;i<5;i++){
+            $(`#c${i}`).text(cats[i].catname)
+        }
+    }
 
 /** Return object with data about a category:
  *
