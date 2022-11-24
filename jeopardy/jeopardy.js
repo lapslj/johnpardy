@@ -81,6 +81,7 @@ function ranArray(max){
 
 async function catClues(id,cVal){
     let response = await axios.get("https://jservice.io/api/category?id="+id) //returning 1 category object
+    //right here we need to stop if there's less than 5 clues
     let allClues = response.data.clues //store all the clues in an array
     console.log(response)
     // generate 5 random clues
@@ -95,9 +96,12 @@ async function catClues(id,cVal){
         let tClue = allClues[cIndex]
         console.log(tClue)
         let cKey = `c-${cVal}-${i}`
-        let uClue = new Clue(cKey,tClue.question,tClue.answer)
+        try{let uClue = new Clue(cKey,tClue.question,tClue.answer)
         let qname = "q"+i
-        jCat[qname] = uClue
+        jCat[qname] = uClue}
+        catch{let uClue = new Clue(cKey,"[question missing]","n/a")
+        let qname = "q"+i
+        jCat[qname] = uClue}
     }
     console.log(jCat) //return 5 category names and 5 clues from each category, sort by value
     return jCat
@@ -106,8 +110,8 @@ async function catClues(id,cVal){
 //randfive returns an array of 5 random categories and 5 of their clues
 async function randFive(){
     let categories = []
-    let nums = ranArray(5000);
-    for (let i = 0;i < 5; i++){
+    let nums = [...ranArray(5000),...ranArray(5000)];
+    for (let i = 0;i < 6; i++){
         categories.push(await catClues(nums[i],i))
     }
     console.log("here's our categories")
@@ -117,10 +121,16 @@ async function randFive(){
 
 async function fillBoard(){
     let cats = await randFive()
-        for(let i=0;i<5;i++){
+        for(let i=0;i<6;i++){
             $(`#c${i}`).text(cats[i].catname)
         }
     }
+
+function initGame(){
+    let g = new Game();
+    try{fillBoard()}
+    catch{try{fillBoard()}catch{fillBoard()}}
+}   
 
 /** Return object with data about a category:
  *
