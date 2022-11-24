@@ -6,6 +6,50 @@ class Clue{
         }
 }
 
+class Game{
+    constructor(height = 5,width=6){
+        this.height = height;
+        this.width = width;
+        this.makeBoard();
+        this.makeHtmlBoard();
+    }
+
+    makeBoard(){
+        this.board = [];
+        for (let y = 0; y < this.height; y++) {
+          this.board.push(Array.from({ length: this.width })); //destructuring a number, width, into an array 
+        }
+      }
+    
+    makeHtmlBoard(){
+    const docBoard = document.getElementById('jeopardy');
+    docBoard.innerHTML = '' //clear inner table
+    const top = document.createElement('tr');
+    top.setAttribute('id', 'column-top');
+    for (let x = 0; x < this.width; x++) {
+    const headCell = document.createElement('td');
+    headCell.setAttribute('id', x);
+    top.append(headCell);
+    }
+
+  docBoard.append(top);
+
+  // make main part of board
+  for (let y = 0; y < this.height; y++) {
+    const row = document.createElement('tr');
+
+    for (let x = 0; x < this.width; x++) {
+      const cell = document.createElement('td');
+      cell.setAttribute('id', `c${x}-${y}`);
+      row.append(cell);
+    }
+
+    docBoard.append(row);
+  }
+}
+
+}
+
 //next: get randFive to spit out a Game object with 5 categories, 5 Clues each
 //then we map those categories onto the DOM
 
@@ -23,7 +67,7 @@ function ranGen(max){
 }
 }
 
-//generate a random UNIQUE arraw of 5 numbers (fails at 100 tries)
+//generate a random UNIQUE array of 5 numbers (fails at 100 tries)
 function ranArray(max){
     for (let i = 0; i <10; i++){
         let rArray = ranGen(max)
@@ -67,6 +111,9 @@ async function randFive(){
     console.log(categories)
     return categories
 }
+
+
+
 
 // categories is the main data structure for the app; it looks like this:
 

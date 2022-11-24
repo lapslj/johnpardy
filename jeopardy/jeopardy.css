@@ -5,3 +5,18 @@
   #8d2ab5
   #74119c
 */
+
+table{
+  background-color:#115ff4;
+  color:white;
+}
+
+#column-top{
+  background-color:#060ce9 ;
+}
+
+td{
+  width:80px;
+  height:80px;
+  border:solid 2px;
+}
