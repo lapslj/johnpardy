@@ -1,3 +1,5 @@
+let $btn = $("#stButton")
+
 class Clue{
     constructor(cKey,question,answer,showing = "null"){
         this.cKey = cKey;
@@ -12,7 +14,7 @@ class Game{
         this.height = height;
         this.width = width;
         this.makeBoard();
-        this.makeHtmlBoard();
+        this.fillTable();
     }
 
     makeBoard(){
@@ -22,7 +24,7 @@ class Game{
         }
       }
     
-    makeHtmlBoard(){
+    fillTable(){
     const docBoard = document.getElementById('jeopardy');
     docBoard.innerHTML = '' //clear inner table
     const top = document.createElement('tr');
@@ -41,7 +43,8 @@ class Game{
 
     for (let x = 0; x < this.width; x++) {
       const cell = document.createElement('td');
-      cell.setAttribute('id', `c${x}-${y}`);
+      cell.setAttribute('id', `q${x}${y}`);
+      cell.classList.toggle("question");
       cell.innerText = "?"
       row.append(cell);
     }
@@ -79,31 +82,31 @@ function ranArray(max){
     
 }
 
-async function catClues(id,cVal){
+async function getCategory(id,cVal){
     let response = await axios.get("https://jservice.io/api/category?id="+id) //returning 1 category object
     //right here we need to stop if there's less than 5 clues
     let allClues = response.data.clues //store all the clues in an array
-    console.log(response)
+    // console.log(response)
     // generate 5 random clues
     let cluesTotal = response.data.clues.length //store how many clues there are
     let clueVals = ranArray(cluesTotal) //array of 5 random numbers within the length of how many clues there are
-    console.log(cluesTotal)
-    console.log(clueVals)
+    // console.log(cluesTotal)
+    // console.log(clueVals)
     let jCat = {}
-    jCat.catname = (response.data.title).toUpperCase()
+    jCat["catname"+cVal] = (response.data.title).toUpperCase()
     for(let i=0;i<5;i++){
         let cIndex = clueVals[i]
         let tClue = allClues[cIndex]
         console.log(tClue)
         let cKey = `c-${cVal}-${i}`
         try{let uClue = new Clue(cKey,tClue.question,tClue.answer)
-        let qname = "q"+i
+        let qname = "q"+cVal+i
         jCat[qname] = uClue}
         catch{let uClue = new Clue(cKey,"[question missing]","n/a")
-        let qname = "q"+i
+        let qname = "q"+cVal+i
         jCat[qname] = uClue}
     }
-    console.log(jCat) //return 5 category names and 5 clues from each category, sort by value
+    // console.log(jCat) //return 5 category names and 5 clues from each category, sort by value
     return jCat
 }
 
@@ -112,18 +115,20 @@ async function randFive(){
     let categories = []
     let nums = [...ranArray(5000),...ranArray(5000)];
     for (let i = 0;i < 6; i++){
-        categories.push(await catClues(nums[i],i))
+        // categories.push(await catClues(nums[i],i))
+        categories = {...categories,...await getCategory(nums[i],i)}
     }
     //restructure array here to yield something more flat, just 30 clues.
-    console.log("here's our categories")
-    console.log(categories)
+    // console.log("here's our categories")
+    // console.log(categories)
     return categories
 }
 
 async function pullData(){
     let cats = await randFive()
         for(let i=0;i<6;i++){
-            $(`#c${i}`).text(cats[i].catname)
+            let cName = `catname${i}`
+            $(`#c${i}`).html(cats[cName])
         } 
     return cats
         // for(let j = 0;j<5;j++)
@@ -133,16 +138,36 @@ async function pullData(){
         // }
     }
 
-function giveClick(key,cats){
-    $(key).on("click",function(){
-        let desClue = cats[]
-    })
-}
+    function showLoadingView() {
+        $btn.attr("visibility","hidden")
+        //create a gif div and append to loadspace
+        $("#loadspace").append("<img src=\"loading.gif\"></img>")
+        $btn.text("click here if you're waiting longer than a few seconds")
+    
+    }
 
-async function initGame(){
+    function hideLoadingView() {
+        $btn.attr("visibility","visible")
+        $("img").remove()
+        $btn.text("Restart Game")
+    }
+    
+
+async function setupAndStart(){
+    showLoadingView();
     let g = new Game();
     let cats = await pullData()
-    console.log("here's what cats look like"+cats[1].catname)
+    // console.log("here's what cats look like")
+    // console.log(cats)
+    for(let i = 0;i<6;i++){
+        for (let j=0;j<5;j++){
+            let key = `q${i}${j}`
+            // console.log("assigning question"+key)
+            // console.log(cats[key].question)
+            handleClick(key,cats[key])
+        }
+    }
+    hideLoadingView();
 
     //rename cats Clue Array so that it has IDs that match the cell
     // try{fillBoard()} // TODO - have initGame be the try-catch-try
@@ -155,35 +180,7 @@ async function initGame(){
     //if answer, do nothing
 }   
 
-function assignClickers(){
-
-}
-
-/** Return object with data about a category:
- *
- *  Returns { title: "Math", clues: clue-array }
- *
- * Where clue-array is:
- *   [
- *      {question: "Hamlet Author", answer: "Shakespeare", showing: null},
- *      {question: "Bell Jar Author", answer: "Plath", showing: null},
- *      ...
- *   ]
- */
-
-function getCategory(catId) {
-}
-
-/** Fill the HTML table#jeopardy with the categories & cells for questions.
- *
- * - The <thead> should be filled w/a <tr>, and a <td> for each category
- * - The <tbody> should be filled w/NUM_QUESTIONS_PER_CAT <tr>s,
- *   each with a question for each category in a <td>
- *   (initally, just show a "?" where the question/answer would go.)
- */
-
-async function fillTable() {
-}
+$btn.on("click",setupAndStart)
 
 /** Handle clicking on a clue: show the question or answer.
  *
@@ -193,36 +190,20 @@ async function fillTable() {
  * - if currently "answer", ignore click
  * */
 
-function handleClick(evt) {
+function handleClick(key,cats){
+    $(`#${key}`).on("click",function(e){
+        let qC = cats.question
+        let qA = cats.answer
+        if(cats.showing === "null"){
+            newText = qC;
+            cats.showing = "question";
+        }else if (cats.showing === "question"){
+            newText = qA
+            cats.showing = "answer"
+            e.target.classList.toggle("answer")
+        }else{newText = qA}
+        $(`#${key}`).html(newText)
+    })
+
 }
 
-/** Wipe the current Jeopardy board, show the loading spinner,
- * and update the button used to fetch data.
- */
-
-function showLoadingView() {
-
-}
-
-/** Remove the loading spinner and update the button used to fetch data. */
-
-function hideLoadingView() {
-}
-
-/** Start game:
- *
- * - get random category Ids
- * - get data for each category
- * - create HTML table
- * */
-
-async function setupAndStart() {
-}
-
-/** On click of start / restart button, set up game. */
-
-// TODO
-
-/** On page load, add event handler for clicking clues */
-
-// TODO
