@@ -114,23 +114,50 @@ async function randFive(){
     for (let i = 0;i < 6; i++){
         categories.push(await catClues(nums[i],i))
     }
+    //restructure array here to yield something more flat, just 30 clues.
     console.log("here's our categories")
     console.log(categories)
     return categories
 }
 
-async function fillBoard(){
+async function pullData(){
     let cats = await randFive()
         for(let i=0;i<6;i++){
             $(`#c${i}`).text(cats[i].catname)
-        }
+        } 
+    return cats
+        // for(let j = 0;j<5;j++)
+        // {
+        //     console.log(`#c0-${j}`)
+        //     $(`#c0-${j}`).text(cats[0].q0.question)
+        // }
     }
 
-function initGame(){
+function giveClick(key,cats){
+    $(key).on("click",function(){
+        let desClue = cats[]
+    })
+}
+
+async function initGame(){
     let g = new Game();
-    try{fillBoard()}
-    catch{try{fillBoard()}catch{fillBoard()}}
+    let cats = await pullData()
+    console.log("here's what cats look like"+cats[1].catname)
+
+    //rename cats Clue Array so that it has IDs that match the cell
+    // try{fillBoard()} // TODO - have initGame be the try-catch-try
+    // catch{try{fillBoard()}catch{fillBoard()}}
+    //assign clickers to each cell where: y
+    //you click cell c-1-2
+    //it checks the status "null, question, answer"
+    //if null --> question, pull in text of clue x-1-2,
+    //if question --> answer, pull in text of answer
+    //if answer, do nothing
 }   
+
+function assignClickers(){
+
+}
 
 /** Return object with data about a category:
  *
